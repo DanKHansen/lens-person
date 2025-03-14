@@ -6,7 +6,7 @@ object LensPerson:
    case class Name(_foreNames: String /*Space separated*/, _surName: String)
 
    // Value of java.time.LocalDate.toEpochDay
-   type EpochDay = Long
+   private type EpochDay = Long
 
    case class Born(_bornAt: Address, _bornOn: EpochDay)
 
