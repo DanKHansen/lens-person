@@ -1,8 +1,8 @@
-scalaVersion := "3.4.2"
+scalaVersion := "3.6.4"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % Test
 
-val monocleVersion = "3.2.0"
+val monocleVersion = "3.3.0"
 
 libraryDependencies ++= Seq(
   "dev.optics" %%  "monocle-core"  % monocleVersion,

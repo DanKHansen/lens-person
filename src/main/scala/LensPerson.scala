@@ -1,4 +1,6 @@
 import java.time.LocalDate
+import monocle.{Lens, PLens}
+import monocle.macros.GenLens
 
 object LensPerson:
    case class Person(_name: Name, _born: Born, _address: Address)
@@ -17,21 +19,27 @@ object LensPerson:
    case class Gregorian(_year: Int, _month: Int, _dayOfMonth: Int)
 
    // Implement these.
+   private val personBorn: Lens[Person, Born] = GenLens[Person](_._born)
+   private val personAddress: Lens[Person, Address] = GenLens[Person](_._address)
+   private val addressStreet: Lens[Address, String] = GenLens[Address](_._street)
+   private val bornAt: Lens[Born, Address] = GenLens[Born](_._bornAt)
+   private val bornOn: Lens[Born, EpochDay] = GenLens[Born](_._bornOn)
 
    val bornStreet: Born => String =
-      (b: Born) => b._bornAt._street
+      bornAt.andThen(addressStreet).asGetter.get
 
    val setCurrentStreet: String => Person => Person =
-      (s: String) => (p: Person) => p.copy(_address = p._address.copy(_street = s))
+      personAddress.andThen(addressStreet).asSetter.replace
 
    val setBirthMonth: Int => Person => Person =
-      (i: Int) =>
-         (p: Person) =>
-            p.copy(_born = p._born.copy(_bornOn = LocalDate.ofEpochDay(p._born._bornOn).withMonth(i).toEpochDay))
+      (month: Int) =>
+         val f = (d: EpochDay) => LocalDate.ofEpochDay(d).withMonth(month).toEpochDay
+         personBorn.andThen(bornOn).modify(f)
 
    // Transform both birth and current street names.
    val renameStreets: (String => String) => Person => Person =
       (f: String => String) =>
-         (p: Person) =>
-            setCurrentStreet(f(p._address._street))(p).copy(_born =
-               p._born.copy(_bornAt = p._born._bornAt.copy(_street = f(bornStreet(p._born)))))
+         personAddress
+            .andThen(addressStreet)
+            .modify(f)
+            .andThen(personBorn.andThen(bornAt.andThen(addressStreet)).modify(f))
